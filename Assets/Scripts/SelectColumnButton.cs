@@ -17,7 +17,12 @@ public class SelectColumnButton : MonoBehaviour {
 	void Update () {
 
 		// Kill this button if this column is full...
-		if(Gameplay.ColsFull[Column]) Destroy(gameObject);
+		if(Gameplay.ColsFull[Column] || Gameplay.GameInPlay == false) Destroy(gameObject);
 
 	} // End Update()
+
+	// When the player clicks this button make a move in this column...
+	void OnClick() {
+		Gameplay.MakePlayerMove (Column);
+	}
 }
