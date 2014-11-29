@@ -94,10 +94,10 @@ public class Gameplay : MonoBehaviour {
 
 		// Check For Win
 		int Winner = CheckWin ();
-		// Debug.Log (Winner.ToString () + " WIN DEBUG");
+		//Debug.Log (Winner.ToString () + " WIN DEBUG");
 		if(Winner != 0) {
 			GameInPlay = false;
-			// Debug.Log("WINNER IS " + Winner.ToString());
+			//Debug.Log("WINNER IS " + Winner.ToString());
 		}
 
 		
@@ -163,7 +163,7 @@ public class Gameplay : MonoBehaviour {
 
 		yield return new WaitForSeconds (Random.Range (COMP_MIN_THINKING_TIME, COMP_MAX_THINKING_TIME));
 
-		DisplayMove(AIMove());
+		DisplayMove(AIMove(Difficulty, Board));
 		MovesMade[0]++;
 
 		// Change to The Player's Move
@@ -175,7 +175,6 @@ public class Gameplay : MonoBehaviour {
 
 
 	public static void MakePlayerMove(int col) {
-
 		DisplayMove(col);
 		MovesMade[1]++;
 		
@@ -186,6 +185,8 @@ public class Gameplay : MonoBehaviour {
 
 
 	public static void DisplayMove(int col) {
+
+		//Debug.Log (col.ToString() + " COLUMN");
 
 		// Update the Board & FlatBoard...
 		Board[ColHeights[col], col] = FlatBoard[ColHeights[col] * (BOARD_SIZE[0] + 1) + col] = (Turn == 0) ? -1 : 1;
@@ -207,18 +208,10 @@ public class Gameplay : MonoBehaviour {
 	/**
 	 *  @TODO - JOSH
 	 */
-	private int AIMove() {
+	private static int AIMove(int Difficulty, int[,] Board) {
 
-		// IMPLEMENT AI LOGIC HERE!
-		// OR POSSIBLY CALL ANOTHER SCRIPT'S METHOD
-		// SO THIS CLASS DOESN'T GET 'JUNKY.'
-
-		// JUST MODIFY THE BOARD, THEN RETURN AN INT
-		// REPRESENTING THE COLUMN CHOSEN BY THE AI...
-
-		// THIS WILL BE CALLED AFTER X RANDOM SECONDS IN A COUROTINE...
-		// RIGHT NOW IT COMP JUST MAKES A RANDOM MOVE...
-		return MakeRandomAIMove ();
+		AIScript AI = GameObject.Find ("Camera").GetComponent<AIScript> ();
+		return AI.BeginMiniMax (Difficulty, Board);
 
 	} // End MakeAIMove()
 
@@ -248,17 +241,17 @@ public class Gameplay : MonoBehaviour {
 				}
 				
 				// Vertical Win
-				if(i <= 14 && player == FlatBoard[i + 7] && player == FlatBoard[i + 14] && player == FlatBoard[i + 21]) {
+				if(i <= 20 && player == FlatBoard[i + 7] && player == FlatBoard[i + 14] && player == FlatBoard[i + 21]) {
 					return player;
 				}
 				
 				// Diagonal Right Win
-				if(i <= 17 && player == FlatBoard[i + 8] && player == FlatBoard[i + 16] && player == FlatBoard[i + 24]) {
+				if(i % Gameplay.BOARD_SIZE[1] <= 3 && i <= 17 && player == FlatBoard[i + 8] && player == FlatBoard[i + 16] && player == FlatBoard[i + 24]) {
 					return player;
 				}
 				
 				// Diagonal Left Win
-				if(i >= 24 && player == FlatBoard[i - 6] && player == FlatBoard[i - 12] && player == FlatBoard[i - 18]) {
+				if(i % Gameplay.BOARD_SIZE[1] <= 3 && i >= 21 && player == FlatBoard[i - 6] && player == FlatBoard[i - 12] && player == FlatBoard[i - 18]) {
 					return player;
 				}
 				
@@ -269,6 +262,62 @@ public class Gameplay : MonoBehaviour {
 		return 0;
 		
 	} // End Check()
+
+	public static int CheckWin(int[,] board) {
+
+		int[] FlatBoard = ConvertBoard(board);
+		
+		for(int i = 0; i < FlatBoard.Length; i++) {
+			
+			int player = FlatBoard[i];
+			
+			// Debug.Log (FlatBoard[i].ToString() + " _ " + i.ToString());
+			
+			if(player != 0) { // 0 == No Move, -1 == Computer, 1 == Player
+				
+				// Horizonal Win
+				if(i % Gameplay.BOARD_SIZE[1] <= 3 && player == FlatBoard[i + 1] && player == FlatBoard[i + 2] && player == FlatBoard[i + 3]) {
+					return player;
+				}
+				
+				// Vertical Win
+				if(i <= 20 && player == FlatBoard[i + 7] && player == FlatBoard[i + 14] && player == FlatBoard[i + 21]) {
+					return player;
+				}
+				
+				// Diagonal Right Win
+				if(i % Gameplay.BOARD_SIZE[1] <= 3 && i <= 17 && player == FlatBoard[i + 8] && player == FlatBoard[i + 16] && player == FlatBoard[i + 24]) {
+					return player;
+				}
+				
+				// Diagonal Left Win
+				if(i % Gameplay.BOARD_SIZE[1] <= 3 && i >= 21 && player == FlatBoard[i - 6] && player == FlatBoard[i - 12] && player == FlatBoard[i - 18]) {
+					return player;
+				}
+				
+			} // End if block
+			
+		} // End for loop
+		
+		return 0;
+		
+	} // End Check()
+
+	private static int[] ConvertBoard(int[,] board) {
+
+		int[] newBoard = new int[BOARD_SIZE_ROWS * BOARD_SIZE_COLS];
+
+		int counter = 0;
+		for(int i = 0; i < BOARD_SIZE_ROWS; i++) {
+			for(int n = 0; n < BOARD_SIZE_COLS; n++) {
+				newBoard[counter] = board[i, n];
+				counter++;
+			}
+		}
+
+		return newBoard;
+
+	} // End ConvertBoard()
 
 
 	public void ResetGame () {
