@@ -63,6 +63,8 @@ public class Gameplay : MonoBehaviour {
 	// Use this for initialization
 	void Awake () {
 
+		// Debug.Log (Difficulty);
+
 		// The "Select Column" GameObject
 		selectColumn 	= GameObject.Find("Select").gameObject;
 		thinking 		= GameObject.Find("Thinking").gameObject;
@@ -92,10 +94,10 @@ public class Gameplay : MonoBehaviour {
 
 		// Check For Win
 		int Winner = CheckWin ();
-		Debug.Log (Winner.ToString () + " WIN DEBUG");
+		// Debug.Log (Winner.ToString () + " WIN DEBUG");
 		if(Winner != 0) {
 			GameInPlay = false;
-			Debug.Log("WINNER IS " + Winner.ToString());
+			// Debug.Log("WINNER IS " + Winner.ToString());
 		}
 
 		
@@ -150,19 +152,9 @@ public class Gameplay : MonoBehaviour {
 			NGUITools.SetActive (turnIcon, 		false);
 			NGUITools.SetActive (winObjects, 	true);
 
-			StartCoroutine(EndGame());
-
 		}// End if/else(GameInPlay) { ... }
 	
 	} // End Update()
-
-
-	IEnumerator EndGame () {
-
-		yield return new WaitForSeconds (5);
-		Application.LoadLevel("GameOver");
-
-	} // End EndGame()
 
 	
 	IEnumerator MakeAIMove () {
