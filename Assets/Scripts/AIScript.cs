@@ -1,17 +1,20 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class AIScript : MonoBehaviour {
 
 	public int BeginMiniMax(int depth, int[,] board){
 
-		Node root = new Node(null, -1, 1, CopyBoard(board), depth);
-		Node node = AlphaBetaMinimax (root, new Node (), new Node (), depth, true);
+		Debug.Log (depth);
 
-		//Debug.Log (node.score);
-		//Debug.Log (node.column);
+		Node root = new Node(null, 0, 1, CopyBoard(board), depth);
+		Node node = AlphaBetaMinimax (root, new Node(), new Node(), depth, true);
 
-		printBoard (node.board);
+		//Debug.Log (node.board);
+		Debug.Log ("Column " + node.column.ToString());
+
+		//printBoard (node.board);
 		return node.column;
 
 	} // End BeginMiniMax()
@@ -59,13 +62,15 @@ public class AIScript : MonoBehaviour {
 		int win = Gameplay.CheckWin (node.board);
 		//Debug.Log (win.ToString() + " WIN");
 
-		if(depth == 0 || win != 0) {
+		if(depth == 0 || win == -1) {
 
 			if(win == -1) {
+				Debug.Log ("Returning Win!");
 				node.score = 1000000;
 				return node;
 			}
 			else {
+				Debug.Log ("Returning Eval");
 				return node.Eval();
 			}
 
@@ -74,27 +79,32 @@ public class AIScript : MonoBehaviour {
 		if(maxPlayer) {
 
 			for(int i = 0; i < Gameplay.BOARD_SIZE[1]; i++) {
-				if(Gameplay.ColsFull[i] == false){
+				Debug.Log ("FULL?: " + Gameplay.ColHeights[i].ToString());
+				if(Gameplay.ColHeights[i] < Gameplay.BOARD_SIZE[1] - 1){
+					Debug.Log ("HERE " + i.ToString ());
 					Node newNode = new Node(node, i, -1, CopyBoard(node.board), depth--);
+					Debug.Log (newNode.column + " >>> COLUMN");
 					node.AddChild(newNode);
 				}
 
 			}
-
+			//Debug.Log (node.children.Count.ToString() + " CHILD COUNT");
 			for(int i = 0; i < node.children.Count; i++) {
-
-				alpha = Max(alpha, AlphaBetaMinimax(node.children[i] as Node, alpha, beta, depth, false));
-				if(beta.score <= alpha.score) break;
+				alpha = Max(alpha, AlphaBetaMinimax(node.children[i], alpha, beta, depth, false));
+				Debug.Log ("ALPHA " + alpha.column.ToString());
+				printBoard(alpha.board);
 			}
-
+			//Debug.Log ("Returning Alpha");
 			return alpha;
 		}
 		else{ // Not the maxPlayer
 
 			for(int i = 0; i < node.children.Count; i++){
-				beta = Min(beta, AlphaBetaMinimax(node.children[i] as Node, alpha, beta, depth, false));
-				if(beta.score <= alpha.score) break;
+				beta = Min(beta, AlphaBetaMinimax(node.children[i], alpha, beta, depth, false));
+				Debug.Log ("BETA " + beta.column.ToString());
+				printBoard(beta.board);
 			}
+			//Debug.Log ("Returning Beta");
 			return beta;
 
 		} // End if(maxPlayer)
@@ -103,38 +113,61 @@ public class AIScript : MonoBehaviour {
 
 
 	Node Max(Node alphaBeta, Node node){
-		return (alphaBeta.score >= node.score) ? alphaBeta : node;
+		Debug.Log ("AlphaBeta Score " + alphaBeta.score.ToString ());
+		Debug.Log ("Node Score " + node.score.ToString ());
+		if(alphaBeta.score >= node.score) {
+			Debug.Log ("Returning alphaBeta");
+			return alphaBeta;
+		}
+		else {
+			Debug.Log ("Returning node");
+			return node;
+		}
 	}
 	
 	Node Min(Node alphaBeta, Node node){
-		return (alphaBeta.score <= node.score) ? alphaBeta : node;
+		if(alphaBeta.score <= node.score) {
+			return alphaBeta;
+		}
+		else {
+			return node;
+		}
 	}
 	
 
 	public class Node {
 
 		// The Column Chosen by the Player
-		public int column;
+		public int column = 0;
 
 		// The Current State of the Board
-		public int[,] board;
+		public int[,] board = new int[,] { 
+			{ 0, 0, 0, 0, 0, 0, 0 },
+			{ 0, 0, 0, 0, 0, 0, 0 },
+			{ 0, 0, 0, 0, 0, 0, 0 },
+			{ 0, 0, 0, 0, 0, 0, 0 },
+			{ 0, 0, 0, 0, 0, 0, 0 },
+			{ 0, 0, 0, 0, 0, 0, 0 },
+		};
 
 		// The player, -1 Min, 1 Max
-		public int player;
+		public int player = 0;
 
 		// The parent node
-		public Node parent;
+		public Node parent = null;
 
 		// The children nodes
-		public ArrayList children = new ArrayList();
+		public List<Node> children = new List<Node>();
 
 		// The Minimax Score
 		public int score;
 
 		// The depth
-		public int depth;
+		public int depth = 0;
 
-		public Node() { }
+		public Node() {
+			this.score = (player == -1) ? unchecked((int) -Mathf.Infinity) : unchecked((int) Mathf.Infinity);
+		}
 		
 		public Node(Node parent, int column, int player, int[,] board, int depth){
 			this.parent 	= parent;
@@ -143,9 +176,9 @@ public class AIScript : MonoBehaviour {
 			this.board 		= board;
 			this.depth 		= depth;
 
-			if(column != -1) {
-				AddChecker(column);
-			}
+			AddChecker(column);
+
+			this.score = (player == -1) ? unchecked((int) -Mathf.Infinity) : unchecked((int) Mathf.Infinity);
 		}
 
 		public void AddChecker(int inSlot){
@@ -163,10 +196,10 @@ public class AIScript : MonoBehaviour {
 			//Debug.Log (board[i, inSlot].ToString() + " MOVE MADE IN SLOT " + i.ToString() + " - " + inSlot.ToString());
 		}
 		
-		public void AddChild(Node child) { children.Add(child); }
+		public void AddChild(Node child) { this.children.Add(child); }
 
 		public Node Eval() {
-			this.score = 10;
+			this.score = Random.Range (1, 5000);
 			return this;
 		}
 

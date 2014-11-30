@@ -54,11 +54,15 @@ public class Gameplay : MonoBehaviour {
 	// So we can run a Courotine on the AI's thinking process.
 	private bool DisplayingAIMove = false;
 
+	private static int FirstPlayer;
+
 	private GameObject selectColumn;
 	private GameObject thinking;
 	private GameObject turnText;
 	private GameObject turnIcon;
 	private GameObject winObjects;
+
+	private static AIMove AIS;
 	
 	// Use this for initialization
 	void Awake () {
@@ -85,6 +89,8 @@ public class Gameplay : MonoBehaviour {
 
 		// Hide the Win / Loose Game Objects
 		NGUITools.SetActive (winObjects, false);
+
+		AIS = new AIMove(Board, 10);
 	
 	} // End Start()
 
@@ -186,7 +192,7 @@ public class Gameplay : MonoBehaviour {
 
 	public static void DisplayMove(int col) {
 
-		//Debug.Log (col.ToString() + " COLUMN");
+		if(ColsFull[col]) throw new UnityException ("You can't move there... the column is full");
 
 		// Update the Board & FlatBoard...
 		Board[ColHeights[col], col] = FlatBoard[ColHeights[col] * (BOARD_SIZE[0] + 1) + col] = (Turn == 0) ? -1 : 1;
@@ -210,8 +216,7 @@ public class Gameplay : MonoBehaviour {
 	 */
 	private static int AIMove(int Difficulty, int[,] Board) {
 
-		AIScript AI = GameObject.Find ("Camera").GetComponent<AIScript> ();
-		return AI.BeginMiniMax (Difficulty, Board);
+		return AIS.MiniMax();
 
 	} // End MakeAIMove()
 
@@ -303,7 +308,7 @@ public class Gameplay : MonoBehaviour {
 		
 	} // End Check()
 
-	private static int[] ConvertBoard(int[,] board) {
+	public static int[] ConvertBoard(int[,] board) {
 
 		int[] newBoard = new int[BOARD_SIZE_ROWS * BOARD_SIZE_COLS];
 
@@ -327,7 +332,7 @@ public class Gameplay : MonoBehaviour {
 
 		// Select A Random First Move
 		Turn = Random.Range (0, 2);
-
+		FirstPlayer = Turn;
 		// Reset the Board...
 		Board = new int[BOARD_SIZE_ROWS, BOARD_SIZE_COLS];
 		FlatBoard = new int[BOARD_SIZE_ROWS * BOARD_SIZE_COLS];
