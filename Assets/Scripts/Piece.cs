@@ -3,7 +3,8 @@ using System.Collections;
 
 public class Piece : MonoBehaviour {
 
-	public bool isAIPiece = false;
+	public bool isAIPiece = false, enableHit = true;
+	public int numberOfHits = 3;
 
 	// Use this for initialization
 	void Start () {
@@ -18,6 +19,11 @@ public class Piece : MonoBehaviour {
 	}
 
 	void OnCollisionEnter2D(Collision2D o) {
-		audio.Play ();
+		if (enableHit) {
+			numberOfHits--;
+			audio.Play ();
+			if(numberOfHits == 0)
+				enableHit = false;
+		}
 	}
 }
