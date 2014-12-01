@@ -9,6 +9,7 @@ public class AIMove {
 
 	private int    Column;
 
+	private bool AIWin, PlayerWin;
 	public int BoardsChecked = 0;
 
 	private int MIN_INT = unchecked((int) -Mathf.Infinity + 1);
@@ -25,21 +26,21 @@ public class AIMove {
 
 	public int MiniMax() {
 
+		PlayerWin = AIWin = false;
+
 		BoardsChecked = 0;
 		Winner = 0;
 
 		// Eval Player Move
-		EvalMove(-1, 0, -1, MIN_INT, MAX_INT);
-		if(Winner != 0) return Column;
+		EvalMove(-1, 0, 1, -1, MIN_INT, MAX_INT);
+		if(Winner != 0 || AIWin) return Column;
 
-		EvalMove(1, 0, -1, MIN_INT, MAX_INT);
-		if(Winner != 0) return Column;
+		EvalMove(1, 0, 1, -1, MIN_INT, MAX_INT);
+		if(Winner != 0 || PlayerWin) return Column;
 
-		EvalMove(-1, MAX_DEPTH, -1, MIN_INT, MAX_INT);
+		EvalMove(-1, 0, MAX_DEPTH, -1, MIN_INT, MAX_INT);
 
 		// No wins, reuturn the best stragetic move by the AI...
-		Debug.Log (BoardsChecked.ToString() + " BOARDS CHECKED");
-		Debug.Log(Column.ToString() + " COLUMN FINAL");
 		return Column;
 	}
 
@@ -65,18 +66,24 @@ public class AIMove {
 	}
 
 
-	public int EvalMove(int player, int depth, int column, int alpha, int beta) {
+	public int EvalMove(int player, int depth, int maxDepth, int column, int alpha, int beta) {
 
 		//Debug.Log (player);
 
 		BoardsChecked++;
+
+		// Start in Middle to Always win!
+		if(Gameplay.MovesMade[0] + Gameplay.MovesMade[1] == 0) {
+			Column = 3;
+			return 100000;
+		}
 
 		int Score = 0;
 		int Min = unchecked((int) Mathf.Infinity);
 		int Max = unchecked((int) -Mathf.Infinity);
 
 		if(column != -1) {
-			Score = EvalScore(player, column, depth);
+			Score = EvalScore(-player, column, depth);
 			Winner = Gameplay.CheckWin(Board);
 			if(Winner != 0) {
 				Column = column;
@@ -93,7 +100,7 @@ public class AIMove {
 				// Make A "Fake" Move...
 				Board[Gameplay.ColHeights[c], c] = (player == 1) ? 1 : -1;
 				
-				int Value = EvalMove(-player, depth + 1, c, alpha, beta);
+				int Value = EvalMove(-player, depth + 1, maxDepth, c, alpha, beta);
 
 				// Un-do the Move...
 				Board[Gameplay.ColHeights[c], c] = 0;
@@ -111,7 +118,7 @@ public class AIMove {
 					if(depth == 0) Column = c;
 				}
 				
-				if(player == -1) {
+				if(player == 1) {
 					if (Value < beta) beta = Value;
 					if (alpha >= beta) return beta;
 				}
@@ -142,7 +149,7 @@ public class AIMove {
 		int Score = 0;
 		int Row = Gameplay.ColHeights[column] + 1;
 		int AICount, PlayerCount;
-		bool AIWin = false, PlayerWin = false;
+		AIWin = PlayerWin = false;
 		
 		// Check Horizontal
 		AICount = PlayerCount = 0;
@@ -277,16 +284,16 @@ public class AIMove {
 	private int IncrementScore(int PlayerCount, int AICount, int player) {
 
 		if(PlayerCount == AICount) {
-			if (player == 1) return -1;
+			if (player == -1) return -1;
 			return 1;
 		}
-		else if (PlayerCount < AICount) {
-			if (player == 1) return INCREMENT[AICount] - INCREMENT[PlayerCount];
-			return INCREMENT[AICount + 1] - INCREMENT[PlayerCount];
+		else if (AICount < PlayerCount) {
+			if (player == -1) return INCREMENT[PlayerCount] - INCREMENT[AICount];
+			return INCREMENT[PlayerCount + 1] - INCREMENT[AICount];
 		}
 		else {
-			if (player == 1) return -INCREMENT[PlayerCount + 1] + INCREMENT[AICount];
-			return -INCREMENT[PlayerCount] + INCREMENT[AICount];
+			if (player == -1) return -INCREMENT[AICount + 1] + INCREMENT[PlayerCount];
+			return -INCREMENT[AICount] + INCREMENT[PlayerCount];
 		}
 	}
 

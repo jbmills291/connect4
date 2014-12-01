@@ -29,7 +29,7 @@ public class Gameplay : MonoBehaviour {
 	const int BOARD_SIZE_ROWS = 6;
 
 	const int COMP_MIN_THINKING_TIME = 1; // In Seconds
-	const int COMP_MAX_THINKING_TIME = 2;
+	const int COMP_MAX_THINKING_TIME = 4;
 
 	public static int[] BOARD_SIZE = new int[2] { BOARD_SIZE_ROWS, BOARD_SIZE_COLS };
 
@@ -63,6 +63,8 @@ public class Gameplay : MonoBehaviour {
 	private GameObject winObjects;
 
 	private static AIMove AIS;
+
+	private UISprite winSprite;
 	
 	// Use this for initialization
 	void Awake () {
@@ -90,7 +92,9 @@ public class Gameplay : MonoBehaviour {
 		// Hide the Win / Loose Game Objects
 		NGUITools.SetActive (winObjects, false);
 
-		AIS = new AIMove(Board, 10);
+		AIS = new AIMove(Board, Difficulty);
+
+		winSprite = winObjects.transform.FindChild("WinText").GetComponent<UISprite>();
 	
 	} // End Start()
 
@@ -106,8 +110,11 @@ public class Gameplay : MonoBehaviour {
 			//Debug.Log("WINNER IS " + Winner.ToString());
 		}
 
-		
-		if(GameInPlay == true) { // If the game is won, or lost don't make moves...
+		if(GameInPlay && MovesMade[0] + MovesMade[1] == 42) { // There was a draw
+			winSprite.spriteName = "Draw";
+			NGUITools.SetActive (winObjects, true);
+		}
+		else if(GameInPlay == true) {
 
 			// Keep track of full columns, so we don't have to iterate each time...
 			for(int i = 0; i < Board.GetLength(1); i++) {
@@ -142,8 +149,6 @@ public class Gameplay : MonoBehaviour {
 		} // End if(GameInPlay) { ... }
 
 		else { // The game has been won:
-
-			UISprite winSprite = winObjects.transform.FindChild("WinText").GetComponent<UISprite>();
 
 			if(Winner == 1) {
 				winSprite.spriteName = "YouWin";
